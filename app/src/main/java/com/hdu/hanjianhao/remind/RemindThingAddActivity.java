@@ -12,11 +12,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigkoo.pickerview.OptionsPickerView;
+import com.bigkoo.pickerview.TimePickerView;
 import com.fourmob.datetimepicker.date.DatePickerDialog;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class RemindThingAddActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener{
@@ -39,10 +41,9 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
     private int manufactureYear, manufactureMonth, manufactureDay;
     private int guaranteeYear, guaranteeMonth, guaranteeDay;
     private int category = 0;
-    private List<String> yearList = new ArrayList<>();
-    private List<List<String>> monthList = new ArrayList<>();
-    private List<List<List<String>>> dayList = new ArrayList<>();
-    private DatePickerDialog datePickerDialog;
+    private List<String> yearList, monthList, dayList;
+    private TimePickerView pvManufactureDate;
+    private OptionsPickerView pvGuaranteePeriod;
     private Calendar calendar;
 
     @Override
@@ -67,9 +68,12 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         isRemindSwitch = (Switch) findViewById(R.id.switch_btn_is_remind);
         mAlarmReceiver = new AlarmReceiver();
         calendar = Calendar.getInstance();
-        datePickerDialog = DatePickerDialog.newInstance(this, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), false);
+
+
 
         initTimeList();
+        initPvManufactureDate();
+        initPvGuaranteePeriod();
         setSupportActionBar(mToolbar);
         addButton = (FloatingActionButton) findViewById(R.id.save_button);
         addButton.setOnClickListener(new View.OnClickListener() {
@@ -81,7 +85,7 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
                 else if (checkReminder(reminder)){
                     reminder.save();
                     if (reminder.getIsRemind() == 1){
-                        Calendar calendar = Calendar.getInstance();
+                        calendar = Calendar.getInstance();
                         calendar.set(deadlineYear, --deadlineMonth, deadlineDay, 0, 0, 0);
                         mAlarmReceiver.setAlarm(getApplicationContext(), calendar, reminder.getId());
                     }
@@ -160,26 +164,14 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         imgBtnCalendar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                datePickerDialog.setCloseOnSingleTapDay(false);
-                datePickerDialog.show(getSupportFragmentManager(), "calendar");
+                pvManufactureDate.show();
             }
         });
 
         imgBtnTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                OptionsPickerView pvOptions = new  OptionsPickerView.Builder(RemindThingAddActivity.this, new OptionsPickerView.OnOptionsSelectListener() {
-                    @Override
-                    public void onOptionsSelect(int options1, int options2, int options3 ,View v) {
-                        guaranteeYear = options1;
-                        guaranteeMonth = options2;
-                        guaranteeDay = options3;
-                        Log.d("add remind", options1+"年"+options2+"月"+options3+"天");
-                        editGuaranteePeriod.setText(guaranteeYear+" 年 "+guaranteeMonth+" 月 "+guaranteeDay+" 天 ");
-                    }
-                }).setTitleText("保质期选择").setLabels("年", "月", "日").build();
-                 pvOptions.setPicker(yearList, monthList, dayList);
-                pvOptions.show();
+                pvGuaranteePeriod.show();
             }
         });
     }
@@ -230,27 +222,61 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
 
     public void initTimeList() {
 
+        yearList = new ArrayList<>();
+        monthList = new ArrayList<>();
+        dayList = new ArrayList<>();
+
+
         for (int i=0; i<3; ++i)
             yearList.add(i+"");
 
-        List<String> monthList1 = new ArrayList<>();
         for (int i=0; i<12; ++i)
-            monthList1.add(i+"");
+            monthList.add(i+"");
 
-        for (int i=0; i<3; ++i)
-            monthList.add(monthList1);
-
-        List<String> dayList1 = new ArrayList<>();
         for (int i=0; i<30; ++i)
-            dayList1.add(i+"");
+            dayList.add(i+"");
 
-        List<List<String>> dayList2 = new ArrayList<>();
-        for (int i=0; i<12; ++i)
-            dayList2.add(dayList1);
+    }
 
-        for (int i=0; i<3; ++i)
-            dayList.add(dayList2);
+    //保质期将会用到yearList monthList dayList 务必放在 initTimeList() 后面
+    public void initPvGuaranteePeriod(){
+        pvGuaranteePeriod = new  OptionsPickerView.Builder(RemindThingAddActivity.this, new OptionsPickerView.OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int options2, int options3 ,View v) {
+                guaranteeYear = options1;
+                guaranteeMonth = options2;
+                guaranteeDay = options3;
+                Log.d("add remind", options1+"年"+options2+"月"+options3+"天");
+                editGuaranteePeriod.setText(guaranteeYear+" 年 "+guaranteeMonth+" 月 "+guaranteeDay+" 天 ");
+            }
+        }).setTitleText("保质期选择")
+                .setLabels("年", "月", "日")
+                .build();
+        pvGuaranteePeriod.setNPicker(yearList, monthList, dayList);
+    }
 
+    public void initPvManufactureDate(){
+        Calendar startDate = Calendar.getInstance();
+        Calendar endDate = Calendar.getInstance();
+        startDate.set(1980, 0, 0);
+        pvManufactureDate = new TimePickerView.Builder(RemindThingAddActivity.this, new TimePickerView.OnTimeSelectListener() {
+            @Override
+            public void onTimeSelect(Date date, View v) {//选中事件回调
+                Calendar dateSelected = Calendar.getInstance();
+                dateSelected.setTime(date);
+                calendar = Calendar.getInstance();
+                manufactureYear = dateSelected.get(Calendar.YEAR);
+                manufactureMonth = dateSelected.get(Calendar.MONTH);
+                manufactureDay = dateSelected.get(Calendar.DAY_OF_MONTH);
+                editManufactureDate.setText(manufactureYear+" 年 "+(++manufactureMonth)+" 月 "+manufactureDay+" 日 ");
+            }
+        }).setType(TimePickerView.Type.YEAR_MONTH_DAY)
+                .setLabel("年", "月", "日", "", "", "") //设置空字符串以隐藏单位提示   hide label
+                .setDividerColor(R.color.colorAccent)
+                .setDate(endDate)
+                .setRangDate(startDate, endDate)
+                .setContentSize(20)
+                .build();
     }
 
     public void resetCategoryBtnResourceId(){

@@ -121,7 +121,8 @@
                         android:layout_marginRight="20dp"
                         android:textSize="15sp"
                         android:maxLines="1"
-                        android:imeOptions="actionDone"
+                        android:imeOptions="actionGo"
+                        android:inputType="text"
                         android:visibility="gone"/>
 
                 </RelativeLayout>

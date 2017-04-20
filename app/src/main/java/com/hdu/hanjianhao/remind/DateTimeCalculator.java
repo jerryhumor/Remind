@@ -129,16 +129,27 @@ public class DateTimeCalculator {
     }
 
     public String getDisplayLeftGuarantee(long leftGuarantee){
-        long day = leftGuarantee%30;
-        long month = leftGuarantee/30;
-        long year = month/365;
-        if (month == 0)
-            return day+" 天";
-        else{
-            if (year == 0)
-                return month + " 月 " + day + " 天";
-            else
-                return year + " 年 " + month + " 月 " + day + " 天";
+        long year = leftGuarantee/365;
+        long days = leftGuarantee%365;
+        long month = days/30;
+        long day = days%30;
+
+        if (year != 0 && month != 0){
+            if (month == 12){
+                year += 1;
+                month = 0;
+                return "剩余约 " + year + " 年";
+            }
+            return "剩余约 " + year + " 年 " + month + " 个月";
+        }else if (year != 0 && month == 0){
+            return "剩余约 " + year + " 年";
+        }else if (year == 0 && month != 0){
+            if (month == 12){
+                return "剩余约 1 年";
+            }
+            return "剩余 " + month + " 个月 " + day + " 天";
+        }else{
+            return "剩余 " + day + " 天";
         }
     }
 
