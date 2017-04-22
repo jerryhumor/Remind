@@ -173,7 +173,6 @@ public class RemindThingsShowActivity extends AppCompatActivity {
                 imgBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        //TODO:通过itemView的id来得到reminder实例 判断提醒是否为1 是 则设置提醒的按钮 不是则设置不提醒的按钮
                         int position = ViewHolder.this.getAdapterPosition();
                         Log.d("imgbtn", "onclick: " + position);
                         Reminder selectedReminder = reminders.get(position);
