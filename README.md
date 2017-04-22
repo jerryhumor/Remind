@@ -30,3 +30,5 @@
 ![列表页面](screenshot/show.jpg)
 
 ![添加页面](screenshot/add.jpg)
+
+![通知页面](screenshot/notification.jpg)
