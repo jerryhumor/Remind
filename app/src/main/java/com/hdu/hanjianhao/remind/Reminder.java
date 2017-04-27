@@ -31,7 +31,7 @@ public class Reminder extends DataSupport{
     private String deadline;
 
     @Column(nullable = false, defaultValue = "0")
-    private long leftGuarantee;                                         //表示剩余保质期天数
+    private long leftGuarantee;                                         //表示剩余保质期小时数
 
     @Column(nullable = false, defaultValue = "1")
     private float fresh;
@@ -41,6 +41,10 @@ public class Reminder extends DataSupport{
 
     @Column(nullable = false, defaultValue = "15")                      //默认提前17小时 即前一天早上9点提醒
     private int advanceHour;
+
+    @Column(nullable = true, defaultValue = "这个人很懒，什么都没留下")
+    private String remarks;
+
 
 
 
@@ -130,5 +134,13 @@ public class Reminder extends DataSupport{
 
     public void setAdvanceHour(int advanceHour) {
         this.advanceHour = advanceHour;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 }

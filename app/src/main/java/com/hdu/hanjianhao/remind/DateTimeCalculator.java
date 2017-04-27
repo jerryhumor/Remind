@@ -16,7 +16,7 @@ public class DateTimeCalculator {
 
     //获取当前时间 格式为"yyyy-MM-dd"
     public String getCurrentTime(){
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH");
         String date = simpleDateFormat.format(new Date());
         return date;
     }
@@ -66,19 +66,22 @@ public class DateTimeCalculator {
         int currentYear = Integer.valueOf(currentTimeSplit[0]);
         int currentMonth = Integer.valueOf(currentTimeSplit[1]);
         int currentDay = Integer.valueOf(currentTimeSplit[2]);
+        int currentHour = Integer.valueOf(currentTimeSplit[3]);
         int deadlineYear = Integer.valueOf(deadlineSplit[0]);
         int deadlineMonth = Integer.valueOf(deadlineSplit[1]);
         int deadlineDay = Integer.valueOf(deadlineSplit[2]);
 
         Calendar currentCalendar = Calendar.getInstance();
-        currentCalendar.set(currentYear, currentMonth, currentDay);
+        currentCalendar.set(currentYear, currentMonth, currentDay, currentHour, 0, 0);
         Calendar deadlineCalendar = Calendar.getInstance();
-        deadlineCalendar.set(deadlineYear, deadlineMonth, deadlineDay);
+        deadlineCalendar.set(deadlineYear, deadlineMonth, deadlineDay, 0, 0, 0);
 
         long guaranteeMillis = deadlineCalendar.getTimeInMillis() - currentCalendar.getTimeInMillis();
-        long guaranteeDays = guaranteeMillis/(1000*60*60*24);
+        long guaranteeHours = guaranteeMillis/(1000*60*60);
 
-        return guaranteeDays;
+        Log.d("calculator", "left guarantee: " + guaranteeHours);
+
+        return guaranteeHours;
     }
 
     //传入一个reminder 得到新鲜度
@@ -96,39 +99,55 @@ public class DateTimeCalculator {
 
         if (guaranteeDays == 0)
             return 0f;
-        long leftGuaranteeDays = reminder.getLeftGuarantee();
+        long leftGuaranteeHours = reminder.getLeftGuarantee();
 
         Log.d(tag, "left guarantee: " + reminder.getLeftGuarantee());
         Log.d(tag, "guarantee: " + guaranteeDays);
 
-        return (float)leftGuaranteeDays/guaranteeDays;
+        return (float)leftGuaranteeHours/(guaranteeDays*24);
     }
 
     //传入一个reminder 得到剩余保质期
     //根据createDate 和 deadline 来计算 务必放到 getDeadline() 之后
     public long firstGetLeftGuarantee(Reminder reminder){
+
+        String tag = "first guarantee";
+
         //TODO:检测是否过期
         String currentDateSpilt[] = reminder.getCreateDate().split("-");
         String deadlineSplit[] = reminder.getDeadline().split("-");
         int currentYear = Integer.valueOf(currentDateSpilt[0]);
         int currentMonth = Integer.valueOf(currentDateSpilt[1]);
         int currentDay = Integer.valueOf(currentDateSpilt[2]);
+        int currentHour = Integer.valueOf(currentDateSpilt[3]);
         int deadlineYear = Integer.valueOf(deadlineSplit[0]);
         int deadlineMonth = Integer.valueOf(deadlineSplit[1]);
         int deadlineDay = Integer.valueOf(deadlineSplit[2]);
 
         Calendar currentCalendar = Calendar.getInstance();
-        currentCalendar.set(currentYear, currentMonth, currentDay);
+        currentCalendar.set(currentYear, currentMonth, currentDay, currentHour, 0, 0);
         Calendar deadlineCalendar = Calendar.getInstance();
-        deadlineCalendar.set(deadlineYear, deadlineMonth, deadlineDay);
+        deadlineCalendar.set(deadlineYear, deadlineMonth, deadlineDay, 0, 0, 0);
 
-        long guaranteeMillis = deadlineCalendar.getTimeInMillis() - currentCalendar.getTimeInMillis();
-        long guaranteeDays = guaranteeMillis/(1000*60*60*24);
+        long deadlineMillis = deadlineCalendar.getTimeInMillis();
+        long currentMillis = currentCalendar.getTimeInMillis();
 
-        return guaranteeDays;
+        long guaranteeMillis = deadlineMillis - currentMillis;
+        long guaranteeHours = guaranteeMillis/(1000*60*60);
+
+        Log.d(tag, "current year: " + currentYear);
+        Log.d(tag, "current month: " + currentMonth);
+        Log.d(tag, "current day: " + currentDay);
+        Log.d(tag, "current hour: " + currentHour);
+        Log.d(tag, "deadlineMillis: " + deadlineMillis);
+        Log.d(tag, "currentMillis: " + currentMillis);
+        Log.d(tag, "left guarantee millis: " + guaranteeMillis);
+
+        return guaranteeHours;
     }
 
     public String getDisplayLeftGuarantee(long leftGuarantee){
+        leftGuarantee /= 24;
         long year = leftGuarantee/365;
         long days = leftGuarantee%365;
         long month = days/30;
@@ -184,5 +203,13 @@ public class DateTimeCalculator {
         dateArray[1] = Integer.valueOf(dateSplit[1]);
         dateArray[2] = Integer.valueOf(dateSplit[2]);
         return dateArray;
+    }
+
+    public String getDisplayRemindDate(int advancedHour){
+        int advancedDay = advancedHour/24 + 1;
+        advancedHour %= 24;
+        advancedHour = 24 - advancedHour;
+
+        return "将在前" + advancedDay + "天" + advancedHour + "点提醒";
     }
 }

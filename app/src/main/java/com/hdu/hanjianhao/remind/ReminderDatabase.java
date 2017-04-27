@@ -18,7 +18,7 @@ public class ReminderDatabase {
     }
 
     public List<Reminder> getReminders(){
-        reminders = DataSupport.where("fresh > 0").find(Reminder.class);
+        reminders = DataSupport.where("fresh >= 0").find(Reminder.class);
         return reminders;
     }
 

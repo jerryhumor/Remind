@@ -13,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bigkoo.pickerview.OptionsPickerView;
 import com.bigkoo.pickerview.TimePickerView;
@@ -32,26 +33,27 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
     //组件
     private Toolbar mToolbar;
     private ImageView imgCategory;
-    private TextView name, createDate, manufactureDate, guaranteePeriod, deadline, leftGuarantee;
+    private TextView name, remarks, createDate, manufactureDate, guaranteePeriod, advancedTime, deadline, leftGuarantee;
     private Switch isRemind;
     private FloatingActionButton editButton;
-    private EditText editName;
-    private ImageButton imgBtnEditName, imgBtnManufactureDate, imgBtnGuaranteePeriod;
+    private EditText editName, editRemarks;
+    private ImageButton imgBtnEditName, imgBtnManufactureDate, imgBtnGuaranteePeriod, imgBtnAdvancedHour, imgBtnEditRemarks;
 
     //变量
-    private boolean nameEdited, manufactureDateEdited, guaranteePeriodEdited, remindEdited;
+    private boolean nameEdited, manufactureDateEdited, guaranteePeriodEdited, advancedHourEdited, remindEdited, remarksEdited;
     private Reminder reminder;
     private int guaranteeYear, guaranteeMonth, guaranteeDay;
     private int manufactureYear, manufactureMonth, manufactureDay;
     private int deadlineYear, deadlineMonth, deadlineDay;
-    private List<String> yearList, monthList, dayList;
+    private int advancedDay, advancedHour, advancedHours;
+    private List<String> yearList, monthList, dayList, advancedDayList, advancedHourList;
     private Calendar calendar;
 
     //工具
     private DateTimeCalculator calculator = new DateTimeCalculator();
     private AlarmReceiver mAlarmReceiver = new AlarmReceiver();
     private TimePickerView pvManufactureDate;
-    private OptionsPickerView pvGuaranteePeriod;
+    private OptionsPickerView pvGuaranteePeriod, pvAdvancedHour;
 
 
     @Override
@@ -71,20 +73,27 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
         guaranteeMonth = guaranteePeriodSplit[1];
         guaranteeDay = guaranteePeriodSplit[2];
 
+        advancedHours = reminder.getAdvanceHour();
+
         mToolbar = (Toolbar) findViewById(R.id.toolbar_detail);
         imgCategory = (ImageView) findViewById(R.id.img_category);
         name = (TextView) findViewById(R.id.text_name);
+        remarks = (TextView) findViewById(R.id.text_remarks);
         createDate = (TextView) findViewById(R.id.text_create_date);
         manufactureDate = (TextView) findViewById(R.id.text_manufacture_date);
         guaranteePeriod = (TextView) findViewById(R.id.text_guarantee_period);
+        advancedTime = (TextView) findViewById(R.id.text_advanced_hour);
         deadline = (TextView) findViewById(R.id.text_deadline);
         leftGuarantee = (TextView) findViewById(R.id.text_left_guarantee);
         isRemind = (Switch) findViewById(R.id.btn_is_remind);
         editButton = (FloatingActionButton) findViewById(R.id.edit_btn);
         editName = (EditText) findViewById(R.id.edit_name);
+        editRemarks = (EditText) findViewById(R.id.edit_remarks);
         imgBtnEditName = (ImageButton) findViewById(R.id.img_btn_edit_name);
         imgBtnManufactureDate = (ImageButton) findViewById(R.id.img_btn_edit_manufacture_date);
         imgBtnGuaranteePeriod = (ImageButton) findViewById(R.id.img_btn_edit_guarantee_period);
+        imgBtnAdvancedHour = (ImageButton) findViewById(R.id.img_btn_edit_advanced_hour);
+        imgBtnEditRemarks = (ImageButton) findViewById(R.id.img_btn_edit_remarks);
 
         setSupportActionBar(mToolbar);
         imgCategory.setImageResource(getImgResourceId(reminder.getCategory()));
@@ -92,6 +101,7 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
         createDate.setText(calculator.getDisplayDate(reminder.getCreateDate()));
         manufactureDate.setText(calculator.getDisplayDate(reminder.getManufactureDate()));
         guaranteePeriod.setText(calculator.getDisplayGuarantee(reminder.getGuaranteePeriod()));
+        advancedTime.setText(calculator.getDisplayRemindDate(reminder.getAdvanceHour()));
         deadline.setText(calculator.getDisplayDate(reminder.getDeadline()));
         leftGuarantee.setText(calculator.getDisplayLeftGuarantee(reminder.getLeftGuarantee()));
         if (reminder.getIsRemind() == 1)
@@ -102,6 +112,7 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
         initTimeList();
         initPvGuaranteePeriod();
         initPvManufactureDate();
+        initPvAdvancedTime();
         calendar = Calendar.getInstance();
         editName.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -115,7 +126,26 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
                         editName.setVisibility(View.INVISIBLE);
                         name.setText(editName.getText().toString());
                         name.setVisibility(View.VISIBLE);
+                        return true;
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
 
+        editRemarks.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER){
+                    if (event.getAction() == KeyEvent.ACTION_UP){
+                        InputMethodManager imm = (InputMethodManager)v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (imm.isActive())
+                            imm.hideSoftInputFromWindow(v.getApplicationWindowToken(), 0 );
+
+                        editRemarks.setVisibility(View.INVISIBLE);
+                        remarks.setText(editName.getText().toString());
+                        remarks.setVisibility(View.VISIBLE);
                         return true;
                     }
                     return true;
@@ -127,11 +157,21 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
         editButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 remindEdited = (reminder.getIsRemind() != (isRemind.isChecked()?1:0));
-                if (nameEdited || manufactureDateEdited || guaranteePeriodEdited ||remindEdited){
-                    if (nameEdited){
+                if (nameEdited || remarksEdited || manufactureDateEdited || guaranteePeriodEdited || remindEdited){
+
+                    Integer deadlineSplit[] = calculator.getDateSplit(reminder.getDeadline());
+                    deadlineYear = deadlineSplit[0];
+                    deadlineMonth = deadlineSplit[1];
+                    deadlineDay = deadlineSplit[2];
+
+                    if (nameEdited)
                         reminder.setName(name.getText().toString());
-                    }
+                    if (remarksEdited)
+                        reminder.setRemarks(remarks.getText().toString());
+                    if (advancedHourEdited)
+                        reminder.setAdvanceHour(advancedHours);
                     /*
                     * 如果生产日期和保质期改了 那就需要重新计算数据 同时重设alarm
                     * 如果生产日期保质期都没有改 那就只是需要重设alarm
@@ -142,18 +182,14 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
                         reminder.setDeadline(calculator.getDeadline(reminder));
                         reminder.setLeftGuarantee(calculator.getLeftGuarantee(reminder));
                         reminder.setFresh(calculator.getFresh(reminder));
-
-                        Integer deadlineSplitArray[] = calculator.getDateSplit(reminder.getDeadline());
-                        deadlineYear = deadlineSplitArray[0];
-                        deadlineMonth = deadlineSplitArray[1];
-                        deadlineDay = deadlineSplitArray[2];
+                        reminder.setAdvanceHour(advancedHours);
 
                         if (isRemind.isChecked()){
                             if (reminder.getIsRemind() == 0){
                                 reminder.setIsRemind(1);
                                 calendar = Calendar.getInstance();
                                 calendar.set(deadlineYear, --deadlineMonth, deadlineDay, 0, 0, 0);
-                                mAlarmReceiver.setAlarm(getApplicationContext(), calendar, reminder.getId());
+                                mAlarmReceiver.setAlarm(getApplicationContext(), calendar, reminder.getId(), advancedHours);
                             }
                         }else{
                             if (reminder.getIsRemind() == 1){
@@ -161,13 +197,13 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
                                 mAlarmReceiver.cancelAlarm(getApplicationContext(), reminder.getId());
                             }
                         }
-                    }else if (remindEdited){
+                    }else if (remindEdited || advancedHourEdited){
                         if (isRemind.isChecked()){
                             if (reminder.getIsRemind() == 0){
                                 reminder.setIsRemind(1);
                                 calendar = Calendar.getInstance();
                                 calendar.set(deadlineYear, --deadlineMonth, deadlineDay, 0, 0, 0);
-                                mAlarmReceiver.setAlarm(getApplicationContext(), calendar, reminder.getId());
+                                mAlarmReceiver.setAlarm(getApplicationContext(), calendar, reminder.getId(), advancedHours);
                             }
                         }else{
                             if (reminder.getIsRemind() == 1){
@@ -176,12 +212,22 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
                             }
                         }
                     }
+                    if (reminder.getFresh() <= 0){
+                        Toast.makeText(RemindThingDetailActivity.this, "请输入正确的信息", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     reminder.save();
                 }
+                Log.d("detail change", "deadline: " + reminder.getDeadline());
                 Log.d("detail change", "nameEdited: " + nameEdited);
                 Log.d("detail change", "manufactureDateEdited: " + manufactureDateEdited);
                 Log.d("detail change", "guaranteePeriodEdited: " + guaranteePeriodEdited);
                 Log.d("detail change", "remindEdited: " + remindEdited);
+                Log.d("detail change", "advanced hours: " + advancedHours);
+                Log.d("detail change", "deadline year: " + deadlineYear);
+                Log.d("detail change", "deadline month: " + deadlineMonth);
+                Log.d("detail change", "deadline day: " + deadlineDay);
+
                 finish();
             }
         });
@@ -196,9 +242,20 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
             }
         });
 
+        imgBtnEditRemarks.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                remarksEdited = true;
+                remarks.setVisibility(View.INVISIBLE);
+                editRemarks.setVisibility(View.VISIBLE);
+                editRemarks.setText(editRemarks.getText().toString());
+            }
+        });
+
         imgBtnManufactureDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //TODO:逻辑问题 按了按钮不一定编辑 将这个true放在pv中 下同
                 manufactureDateEdited = true;
                 pvManufactureDate.show();
             }
@@ -209,6 +266,14 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
             public void onClick(View v) {
                 guaranteePeriodEdited = true;
                 pvGuaranteePeriod.show();
+            }
+        });
+
+        imgBtnAdvancedHour.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                advancedHourEdited = true;
+                pvAdvancedHour.show();
             }
         });
     }
@@ -276,11 +341,29 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
                 .build();
     }
 
+    public void initPvAdvancedTime(){
+        pvAdvancedHour = new  OptionsPickerView.Builder(RemindThingDetailActivity.this, new OptionsPickerView.OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int options2, int options3 ,View v) {
+                advancedDay = options1;
+                advancedHour = 24 - options2;
+                advancedHours = advancedDay*24+advancedHour;
+                advancedTime.setText("将在前" + (advancedDay+1) + "天的" + options2 + "点通知");
+                Log.d("add remind", options1+"天"+options2+"小时");
+            }
+        }).setTitleText("提前提醒时间选择")
+                .setLabels("", "", "")
+                .build();
+        pvAdvancedHour.setNPicker(advancedDayList, advancedHourList, null);
+    }
+
     public void initTimeList() {
 
         yearList = new ArrayList<>();
         monthList = new ArrayList<>();
         dayList = new ArrayList<>();
+        advancedDayList = new ArrayList<>();
+        advancedHourList = new ArrayList<>();
 
 
         for (int i=0; i<3; ++i)
@@ -292,6 +375,11 @@ public class RemindThingDetailActivity extends AppCompatActivity implements Date
         for (int i=0; i<30; ++i)
             dayList.add(i+"");
 
+        for (int i=1; i<30; ++i)
+            advancedDayList.add("前"+i+"天");
+
+        for (int i=0; i<24; ++i)
+            advancedHourList.add(i+"点");
     }
 
 }

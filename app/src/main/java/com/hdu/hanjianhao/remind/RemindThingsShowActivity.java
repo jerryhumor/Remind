@@ -191,7 +191,7 @@ public class RemindThingsShowActivity extends AppCompatActivity {
                             int deadlineDay = Integer.valueOf(deadlineSplit[2]);
                             Calendar calendar = Calendar.getInstance();
                             calendar.set(deadlineYear, --deadlineMonth, deadlineDay, 0, 0, 0);
-                            mAlarmReceiver.setAlarm(getApplicationContext(),calendar, selectedReminder.getId());
+                            mAlarmReceiver.setAlarm(getApplicationContext(),calendar, selectedReminder.getId(), selectedReminder.getAdvanceHour());
                         }
                     }
                 });

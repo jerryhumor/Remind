@@ -26,11 +26,11 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
     //组件
     private Toolbar mToolbar;
     private FloatingActionButton addButton;
-    private EditText editName;
-    private TextView editManufactureDate, editGuaranteePeriod;
+    private EditText editName, editRemarks;
+    private TextView editManufactureDate, editGuaranteePeriod, editAdvancedTime;
     private Switch isRemindSwitch;
     private ImageButton imgBtnPear, imgBtnCarrot, imgBtnLemon, imgBtnDrumstick, imgBtnPizza,
-            imgBtnCroissant, imgBtnWine, imgBtnCookies, imgBtnCalendar, imgBtnTime;
+            imgBtnCroissant, imgBtnWine, imgBtnCookies, imgBtnCalendar, imgBtnTime, imgBtnAdvanced;
 
     //工具
     private DateTimeCalculator calculator = new DateTimeCalculator();
@@ -40,10 +40,12 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
     private int deadlineYear, deadlineMonth, deadlineDay;
     private int manufactureYear, manufactureMonth, manufactureDay;
     private int guaranteeYear, guaranteeMonth, guaranteeDay;
+    private int advancedDay, advancedHour;
     private int category = 0;
     private List<String> yearList, monthList, dayList;
+    private List<String> advancedDayList, advancedHourList;
     private TimePickerView pvManufactureDate;
-    private OptionsPickerView pvGuaranteePeriod;
+    private OptionsPickerView pvGuaranteePeriod, pvAdvancedTime;
     private Calendar calendar;
 
     @Override
@@ -53,8 +55,10 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar_add);
         editName = (EditText) findViewById(R.id.edit_name);
+        editRemarks = (EditText) findViewById(R.id.edit_remarks);
         editManufactureDate = (TextView) findViewById(R.id.edit_manufacture_date);
         editGuaranteePeriod = (TextView) findViewById(R.id.edit_guarantee_period);
+        editAdvancedTime = (TextView) findViewById(R.id.edit_advanced_time);
         imgBtnPear = (ImageButton) findViewById(R.id.img_btn_category_pear);
         imgBtnCarrot = (ImageButton) findViewById(R.id.img_btn_category_carrot);
         imgBtnLemon = (ImageButton) findViewById(R.id.img_btn_category_lemon);
@@ -65,6 +69,7 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         imgBtnCookies = (ImageButton) findViewById(R.id.img_btn_category_cookies);
         imgBtnCalendar = (ImageButton) findViewById(R.id.img_btn_calendar);
         imgBtnTime = (ImageButton) findViewById(R.id.img_btn_time);
+        imgBtnAdvanced = (ImageButton) findViewById(R.id.img_btn_advanced);
         isRemindSwitch = (Switch) findViewById(R.id.switch_btn_is_remind);
         mAlarmReceiver = new AlarmReceiver();
         calendar = Calendar.getInstance();
@@ -74,6 +79,7 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         initTimeList();
         initPvManufactureDate();
         initPvGuaranteePeriod();
+        initPvAdvancedTime();
         setSupportActionBar(mToolbar);
         addButton = (FloatingActionButton) findViewById(R.id.save_button);
         addButton.setOnClickListener(new View.OnClickListener() {
@@ -87,7 +93,9 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
                     if (reminder.getIsRemind() == 1){
                         calendar = Calendar.getInstance();
                         calendar.set(deadlineYear, --deadlineMonth, deadlineDay, 0, 0, 0);
-                        mAlarmReceiver.setAlarm(getApplicationContext(), calendar, reminder.getId());
+                        int advancedTime = advancedDay*24+advancedHour;
+                        //TODO:放入setAlarm
+                        mAlarmReceiver.setAlarm(getApplicationContext(), calendar, reminder.getId(), advancedTime);
                     }
                     finish();
                 }
@@ -174,6 +182,13 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
                 pvGuaranteePeriod.show();
             }
         });
+
+        imgBtnAdvanced.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pvAdvancedTime.show();
+            }
+        });
     }
 
     @Override
@@ -190,6 +205,7 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         String name = editName.getText().toString();
         String manufactureDate = editManufactureDate.getText().toString();
         String guaranteePeriod = editGuaranteePeriod.getText().toString();
+        String remarks = editRemarks.getText().toString();
 
         if (name.isEmpty() || manufactureDate.isEmpty() || guaranteePeriod.isEmpty())
             return null;
@@ -203,6 +219,9 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         reminder.setLeftGuarantee(calculator.firstGetLeftGuarantee(reminder));
         reminder.setFresh(calculator.getFresh(reminder));
         reminder.setIsRemind(isRemindSwitch.isChecked()? 1:0);
+        reminder.setAdvanceHour(advancedDay*24+advancedHour);
+        reminder.setRemarks(remarks);
+
 
         String deadlineSplit[] = reminder.getDeadline().split("-");
         deadlineYear = Integer.valueOf(deadlineSplit[0]);
@@ -214,9 +233,14 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
 
 
     public boolean checkReminder(Reminder reminder){
-        if (reminder.getFresh() <= 0){
+        if (reminder.getFresh() < 0){
             return false;
         }
+        if (reminder.getLeftGuarantee() < advancedDay*24+advancedHour){
+            Log.d("add remind", "left: " + reminder.getLeftGuarantee() + " advance day: " + advancedDay);
+            return false;
+        }
+
         return true;
     }
 
@@ -225,6 +249,8 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         yearList = new ArrayList<>();
         monthList = new ArrayList<>();
         dayList = new ArrayList<>();
+        advancedDayList = new ArrayList<>();
+        advancedHourList = new ArrayList<>();
 
 
         for (int i=0; i<3; ++i)
@@ -236,6 +262,12 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
         for (int i=0; i<30; ++i)
             dayList.add(i+"");
 
+        for (int i=1; i<30; ++i)
+            advancedDayList.add("前"+i+"天");
+
+        for (int i=0; i<24; ++i)
+            advancedHourList.add(i+"点");
+
     }
 
     //保质期将会用到yearList monthList dayList 务必放在 initTimeList() 后面
@@ -246,7 +278,7 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
                 guaranteeYear = options1;
                 guaranteeMonth = options2;
                 guaranteeDay = options3;
-                Log.d("add remind", options1+"年"+options2+"月"+options3+"天");
+                Log.d("add remind", options1+"年"+options2+"月"+(options3+1)+"天");
                 editGuaranteePeriod.setText(guaranteeYear+" 年 "+guaranteeMonth+" 月 "+guaranteeDay+" 天 ");
             }
         }).setTitleText("保质期选择")
@@ -277,6 +309,21 @@ public class RemindThingAddActivity extends AppCompatActivity implements DatePic
                 .setRangDate(startDate, endDate)
                 .setContentSize(20)
                 .build();
+    }
+
+    public void initPvAdvancedTime(){
+        pvAdvancedTime = new  OptionsPickerView.Builder(RemindThingAddActivity.this, new OptionsPickerView.OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int options2, int options3 ,View v) {
+                advancedDay = options1;
+                advancedHour = 24 - options2;
+                editAdvancedTime.setText("将在前" + (advancedDay+1) + "天的" + options2 + "点通知");
+                Log.d("add remind", options1+"天"+options2+"小时");
+            }
+        }).setTitleText("提前提醒时间选择")
+                .setLabels("", "", "")
+                .build();
+        pvAdvancedTime.setNPicker(advancedDayList, advancedHourList, null);
     }
 
     public void resetCategoryBtnResourceId(){

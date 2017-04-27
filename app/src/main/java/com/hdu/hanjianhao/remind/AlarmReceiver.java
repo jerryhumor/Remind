@@ -37,7 +37,7 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
         PendingIntent mClick = PendingIntent.getActivity(context, reminderId, detailIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_remind))
                 .setSmallIcon(R.drawable.ic_access_time_grey600_24dp)
                 .setContentTitle(context.getResources().getString(R.string.app_name))
                 .setTicker("你有东西要过期啦")
@@ -51,7 +51,10 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
         nManager.notify(reminderId, mBuilder.build());
     }
 
-    public void setAlarm(Context context, Calendar calendar, int ID) {
+    public void setAlarm(Context context, Calendar calendar, int ID, int advancedHour) {
+
+        String tag = "setAlarm";
+
         mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         // Put Reminder ID in Intent Extra
@@ -62,9 +65,11 @@ public class AlarmReceiver extends WakefulBroadcastReceiver {
         // Calculate notification time
         Calendar c = Calendar.getInstance();
         long currentTime = c.getTimeInMillis();
-        long diffTime = calendar.getTimeInMillis() - currentTime;
+        long diffTime = calendar.getTimeInMillis() - currentTime - advancedHour*3600*1000;
 
-        Log.d("AlarmReceiver", "diffTime: " + diffTime);
+        Log.d(tag, "year: " + calendar.get(Calendar.YEAR));
+        Log.d(tag, "advanced hour: " + advancedHour);
+        Log.d(tag, "diffTime: " + diffTime);
 
         // Start alarm using notification time
         mAlarmManager.set(AlarmManager.ELAPSED_REALTIME,

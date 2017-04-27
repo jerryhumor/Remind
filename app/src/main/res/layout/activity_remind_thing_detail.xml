@@ -229,7 +229,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:padding="10dp">
-
                     <TextView
                         android:id="@+id/label_guarantee_period"
                         android:layout_width="wrap_content"
@@ -257,9 +256,51 @@
                         android:layout_toLeftOf="@id/img_btn_edit_guarantee_period"
                         android:layout_marginRight="20dp"
                         android:textSize="15sp"/>
+                </RelativeLayout>
 
+            </android.support.v7.widget.CardView>
 
+            <android.support.v7.widget.CardView
+                android:id="@+id/layout_advanced_hour"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:layout_below="@+id/layout_guarantee_period"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:elevation="5dp">
 
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="10dp">
+                    <TextView
+                        android:id="@+id/label_advanced_hour"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="提醒时间:"
+                        android:textSize="15sp"
+                        android:layout_centerInParent="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_marginLeft="20dp"/>
+
+                    <ImageButton
+                        android:id="@+id/img_btn_edit_advanced_hour"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_centerInParent="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginRight="20dp"
+                        android:background="@drawable/edit1" />
+
+                    <TextView
+                        android:id="@+id/text_advanced_hour"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:layout_toLeftOf="@id/img_btn_edit_advanced_hour"
+                        android:layout_marginRight="20dp"
+                        android:textSize="15sp"/>
                 </RelativeLayout>
 
             </android.support.v7.widget.CardView>
@@ -268,7 +309,7 @@
                 android:id="@+id/layout_deadline"
                 android:layout_width="match_parent"
                 android:layout_height="70dp"
-                android:layout_below="@+id/layout_guarantee_period"
+                android:layout_below="@+id/layout_advanced_hour"
                 android:layout_marginTop="10dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
@@ -336,6 +377,65 @@
                         android:layout_alignParentRight="true"
                         android:layout_marginRight="70dp"
                         android:textSize="15sp"/>
+
+                </RelativeLayout>
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/layout_remarks"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_below="@+id/layout_left_guarantee_period"
+                android:elevation="5dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:id="@+id/label_remarks"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="备      注:"
+                        android:textSize="15sp"
+                        android:layout_centerInParent="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_marginLeft="20dp"/>
+
+                    <ImageButton
+                        android:id="@+id/img_btn_edit_remarks"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerInParent="true"
+                        android:layout_marginRight="20dp"
+                        android:background="@drawable/edit1"/>
+
+                    <TextView
+                        android:id="@+id/text_remarks"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:layout_toLeftOf="@id/img_btn_edit_remarks"
+                        android:layout_marginRight="20dp"
+                        android:textSize="15sp"/>
+
+                    <EditText
+                        android:id="@+id/edit_remarks"
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:layout_toLeftOf="@id/img_btn_edit_remarks"
+                        android:layout_marginRight="20dp"
+                        android:textSize="15sp"
+                        android:maxLines="1"
+                        android:imeOptions="actionGo"
+                        android:inputType="text"
+                        android:visibility="gone"/>
 
                 </RelativeLayout>
             </android.support.v7.widget.CardView>
